@@ -1,5 +1,3 @@
-/////// app.js
-
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
@@ -23,6 +21,11 @@ const User = mongoose.model(
   })
 );
 
+const app = express();
+app.set('views', __dirname);
+app.set('view engine', 'ejs');
+
+//Local Strategy
 passport.use(
   new LocalStrategy((username, password, done) => {
     User.findOne({ username: username }, (err, user) => {
@@ -30,7 +33,7 @@ passport.use(
         return done(err);
       }
       if (!user) {
-        return done(null, false, { mesage: 'Incorrect Username' });
+        return done(null, false, { message: 'Incorrect username' });
       }
       bcrypt.compare(password, user.password, (err, res) => {
         if (res) {
@@ -41,7 +44,6 @@ passport.use(
           return done(null, false, { message: 'Incorrect password' });
         }
       });
-      return done(null, user);
     });
   })
 );
@@ -56,10 +58,6 @@ passport.deserializeUser(function (id, done) {
   });
 });
 
-const app = express();
-app.set('views', __dirname);
-app.set('view engine', 'ejs');
-
 app.use(session({ secret: 'cats', resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -71,9 +69,6 @@ app.get('/sign-up', (req, res) => res.render('sign-up-form'));
 app.post('/sign-up', (req, res, next) => {
   bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
     // if err, do something
-    if (err) {
-      return next(err);
-    }
     // otherwise, store hashedPassword in DB
     const user = new User({
       username: req.body.username,
